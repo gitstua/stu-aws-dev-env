@@ -17,6 +17,7 @@
 #   ./scripts/deploy.sh --region us-east-1 --user bob
 
 set -euo pipefail
+export AWS_PAGER=""
 cd "$(dirname "$0")/.."
 
 # --- defaults ---

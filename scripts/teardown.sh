@@ -16,6 +16,7 @@
 #   --help
 
 set -euo pipefail
+export AWS_PAGER=""
 cd "$(dirname "$0")/.."
 
 # --- defaults ---
@@ -76,6 +77,19 @@ if [[ -z "$EFS_ID" || "$EFS_ID" == "None" ]]; then
   EFS_ID=""
 else
   echo "  EFS filesystem to delete after destroy: $EFS_ID"
+  # Delete mount targets NOW — they block subnet deletion during cdk destroy.
+  echo "--- Deleting EFS mount targets before stack destroy ---"
+  MT_IDS=$(aws efs describe-mount-targets --region "$REGION" \
+    --file-system-id "$EFS_ID" \
+    --query "MountTargets[*].MountTargetId" --output text 2>/dev/null || true)
+  for MT_ID in $MT_IDS; do
+    echo "  Deleting mount target $MT_ID"
+    aws efs delete-mount-target --region "$REGION" --mount-target-id "$MT_ID" || true
+  done
+  if [[ -n "$MT_IDS" ]]; then
+    echo "  Waiting for mount targets to be deleted..."
+    sleep 15
+  fi
 fi
 echo ""
 
