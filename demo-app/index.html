@@ -1,0 +1,943 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusCRM</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3348;
+      --accent: #6366f1;
+      --accent2: #818cf8;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent2), #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .nav-tab {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.15s;
+      border: none;
+      background: none;
+    }
+    .nav-tab.active, .nav-tab:hover { background: var(--surface2); color: var(--text); }
+    .nav-tab.active { color: var(--accent2); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      width: 220px;
+      transition: border-color 0.15s;
+    }
+    .search-box:focus-within { border-color: var(--accent); }
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.85rem;
+      width: 100%;
+    }
+    .search-box input::placeholder { color: var(--muted); }
+    .avatar-sm {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* ── LAYOUT ── */
+    .main { display: flex; flex: 1; }
+    .sidebar {
+      width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+    .sidebar-section { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px 6px; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 8px;
+      font-size: 0.85rem; cursor: pointer; color: var(--muted);
+      transition: all 0.15s; border: none; background: none; width: 100%; text-align: left;
+    }
+    .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-item.active { background: rgba(99,102,241,0.15); color: var(--accent2); }
+    .sidebar-item .icon { width: 18px; text-align: center; }
+    .badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 20px;
+    }
+
+    /* ── CONTENT ── */
+    .content { flex: 1; padding: 28px; overflow-y: auto; }
+
+    /* ── STATS ROW ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .stat-card.c1::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .stat-card.c2::before { background: linear-gradient(90deg, var(--green), #34d399); }
+    .stat-card.c3::before { background: linear-gradient(90deg, var(--yellow), #fcd34d); }
+    .stat-card.c4::before { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+    .stat-label { font-size: 0.75rem; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+    .stat-change { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 0.75rem; }
+    .stat-change.up { color: var(--green); }
+    .stat-change.down { color: var(--red); }
+    .stat-icon {
+      position: absolute; right: 18px; top: 18px;
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; opacity: 0.9;
+    }
+    .s1 .stat-icon { background: rgba(99,102,241,0.15); }
+    .s2 .stat-icon { background: rgba(16,185,129,0.15); }
+    .s3 .stat-icon { background: rgba(245,158,11,0.15); }
+    .s4 .stat-icon { background: rgba(59,130,246,0.15); }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; }
+    .toolbar-title { font-size: 1.1rem; font-weight: 600; }
+    .toolbar-count { font-size: 0.8rem; color: var(--muted); padding: 3px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+    .filter-tabs { display: flex; gap: 4px; }
+    .filter-tab {
+      padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); transition: all 0.15s;
+    }
+    .filter-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .filter-tab:hover:not(.active) { border-color: var(--accent); color: var(--text); }
+    .btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #4f52d4; }
+
+    /* ── CUSTOMER GRID ── */
+    .customer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .customer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .customer-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.15);
+    }
+    .card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700; flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+    .card-info { flex: 1; min-width: 0; }
+    .card-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-role { font-size: 0.75rem; color: var(--muted); }
+    .card-company { font-size: 0.8rem; color: var(--accent2); margin-top: 2px; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
+    }
+    .status-active { background: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+    .status-prospect { background: var(--yellow); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+    .status-inactive { background: var(--muted); }
+    .status-churned { background: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+
+    .card-metrics {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px; margin-bottom: 16px;
+    }
+    .metric { background: var(--surface2); border-radius: 8px; padding: 10px; }
+    .metric-label { font-size: 0.65rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .metric-value { font-size: 0.9rem; font-weight: 700; }
+    .metric-value.green { color: var(--green); }
+    .metric-value.yellow { color: var(--yellow); }
+    .metric-value.blue { color: var(--blue); }
+
+    .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .tag {
+      font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; font-weight: 500;
+    }
+    .tag-enterprise { background: rgba(99,102,241,0.15); color: var(--accent2); border: 1px solid rgba(99,102,241,0.3); }
+    .tag-saas { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .tag-fintech { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .tag-healthcare { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .tag-ecommerce { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+    .tag-smb { background: rgba(168,85,247,0.12); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+    .tag-logistics { background: rgba(20,184,166,0.12); color: #2dd4bf; border: 1px solid rgba(20,184,166,0.3); }
+
+    .card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .last-contact { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .card-actions { display: flex; gap: 6px; }
+    .icon-btn {
+      width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface2); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 0.8rem; transition: all 0.15s; color: var(--muted);
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+    /* Sparkline */
+    .sparkline { margin-bottom: 14px; }
+    .sparkline-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .spark-bar-row { display: flex; align-items: flex-end; gap: 3px; height: 36px; }
+    .spark-bar { flex: 1; border-radius: 3px 3px 0 0; min-width: 6px; transition: height 0.3s; }
+
+    /* Health score bar */
+    .health-bar { height: 4px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+    .health-fill { height: 100%; border-radius: 4px; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 560px;
+      max-width: 95vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header {
+      padding: 24px 24px 0;
+      display: flex; align-items: flex-start; justify-content: space-between;
+    }
+    .modal-body { padding: 20px 24px 24px; }
+    .modal-close {
+      background: var(--surface2); border: none; color: var(--muted);
+      width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .detail-row { display: flex; gap: 12px; margin-bottom: 14px; }
+    .detail-block { flex: 1; background: var(--surface2); border-radius: 8px; padding: 12px; }
+    .detail-block-label { font-size: 0.7rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .detail-block-value { font-size: 0.9rem; font-weight: 600; }
+    .timeline { margin-top: 16px; }
+    .timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .timeline-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: var(--accent); }
+    .timeline-text { font-size: 0.82rem; }
+    .timeline-date { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    /* Empty / hidden */
+    .hidden { display: none !important; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .sidebar { display: none; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .nav-tabs { display: none; }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="logo">⬡ NexusCRM</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active">Dashboard</button>
+    <button class="nav-tab">Pipeline</button>
+    <button class="nav-tab">Reports</button>
+    <button class="nav-tab">Settings</button>
+  </div>
+  <div class="nav-right">
+    <div class="search-box">
+      <span>🔍</span>
+      <input id="globalSearch" type="text" placeholder="Search customers…" oninput="filterCards()" />
+    </div>
+    <div class="avatar-sm">AK</div>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Views</div>
+    <button class="sidebar-item active"><span class="icon">👥</span> All Customers <span class="badge" id="sideCount">12</span></button>
+    <button class="sidebar-item"><span class="icon">⭐</span> Starred</button>
+    <button class="sidebar-item"><span class="icon">📅</span> Follow-ups</button>
+    <button class="sidebar-item"><span class="icon">🔄</span> Renewals</button>
+
+    <div class="sidebar-section">Segments</div>
+    <button class="sidebar-item" onclick="setFilter('enterprise',this)"><span class="icon">🏢</span> Enterprise</button>
+    <button class="sidebar-item" onclick="setFilter('saas',this)"><span class="icon">☁️</span> SaaS</button>
+    <button class="sidebar-item" onclick="setFilter('fintech',this)"><span class="icon">💳</span> FinTech</button>
+    <button class="sidebar-item" onclick="setFilter('healthcare',this)"><span class="icon">🏥</span> Healthcare</button>
+    <button class="sidebar-item" onclick="setFilter('ecommerce',this)"><span class="icon">🛒</span> eCommerce</button>
+    <button class="sidebar-item" onclick="setFilter('logistics',this)"><span class="icon">🚚</span> Logistics</button>
+
+    <div class="sidebar-section">Status</div>
+    <button class="sidebar-item" onclick="setStatusFilter('active',this)"><span class="icon">🟢</span> Active</button>
+    <button class="sidebar-item" onclick="setStatusFilter('prospect',this)"><span class="icon">🟡</span> Prospects</button>
+    <button class="sidebar-item" onclick="setStatusFilter('inactive',this)"><span class="icon">⚫</span> Inactive</button>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card c1 s1">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-value">12</div>
+        <div class="stat-change up">▲ 8.3% this month</div>
+      </div>
+      <div class="stat-card c2 s2">
+        <div class="stat-icon">💰</div>
+        <div class="stat-label">Annual Revenue</div>
+        <div class="stat-value">$4.2M</div>
+        <div class="stat-change up">▲ 14.2% vs last year</div>
+      </div>
+      <div class="stat-card c3 s3">
+        <div class="stat-icon">📋</div>
+        <div class="stat-label">Open Deals</div>
+        <div class="stat-value">27</div>
+        <div class="stat-change down">▼ 2 closed this week</div>
+      </div>
+      <div class="stat-card c4 s4">
+        <div class="stat-icon">📈</div>
+        <div class="stat-label">Avg Health Score</div>
+        <div class="stat-value">78<span style="font-size:1rem;font-weight:400;color:var(--muted)">/100</span></div>
+        <div class="stat-change up">▲ 3pts from last quarter</div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="toolbar-title">Customers</span>
+        <span class="toolbar-count" id="countBadge">12 total</span>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setStatusFilter('all',this)">All</button>
+          <button class="filter-tab" onclick="setStatusFilter('active',this)">Active</button>
+          <button class="filter-tab" onclick="setStatusFilter('prospect',this)">Prospects</button>
+          <button class="filter-tab" onclick="setStatusFilter('inactive',this)">Inactive</button>
+        </div>
+      </div>
+      <button class="btn btn-primary">＋ Add Customer</button>
+    </div>
+
+    <!-- GRID -->
+    <div class="customer-grid" id="customerGrid"></div>
+    <div class="empty-state hidden" id="emptyState">
+      <div class="icon">🔍</div>
+      <p>No customers match your search.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div id="modalTitle" style="display:flex;gap:14px;align-items:center"></div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const customers = [
+  {
+    id: 1,
+    name: "Sarah Chen",
+    role: "VP of Engineering",
+    company: "Axiom Analytics",
+    email: "s.chen@axiomanalytics.io",
+    phone: "+1 (415) 882-9034",
+    status: "active",
+    tags: ["enterprise", "saas"],
+    revenue: "$320K",
+    deals: 3,
+    health: 92,
+    lastContact: "Today",
+    initials: "SC",
+    color: "linear-gradient(135deg,#6366f1,#a855f7)",
+    sparkData: [30,45,40,60,55,75,80,70,90,85],
+    location: "San Francisco, CA",
+    notes: "Key stakeholder for renewal next quarter. Interested in enterprise plan upgrade.",
+    timeline: [
+      { text: "Contract renewal discussion", date: "Jun 10, 2026" },
+      { text: "Product demo — new AI features", date: "Jun 2, 2026" },
+      { text: "Onboarding call completed", date: "May 15, 2026" },
+    ]
+  },
+  {
+    id: 2,
+    name: "Marcus Webb",
+    role: "CEO & Founder",
+    company: "Bridgeway Finance",
+    email: "m.webb@bridgeway.com",
+    phone: "+1 (312) 554-0128",
+    status: "active",
+    tags: ["fintech", "enterprise"],
+    revenue: "$580K",
+    deals: 1,
+    health: 88,
+    lastContact: "Yesterday",
+    initials: "MW",
+    color: "linear-gradient(135deg,#f59e0b,#ef4444)",
+    sparkData: [60,55,70,65,80,78,85,90,88,92],
+    location: "Chicago, IL",
+    notes: "High-value client. Exploring integration with our new compliance module.",
+    timeline: [
+      { text: "Executive business review", date: "Jun 9, 2026" },
+      { text: "Compliance module demo scheduled", date: "Jun 20, 2026" },
+      { text: "Annual contract signed", date: "Jan 12, 2026" },
+    ]
+  },
+  {
+    id: 3,
+    name: "Priya Nair",
+    role: "Head of Operations",
+    company: "HealthPulse Inc.",
+    email: "p.nair@healthpulse.health",
+    phone: "+1 (617) 339-2211",
+    status: "prospect",
+    tags: ["healthcare"],
+    revenue: "$0",
+    deals: 2,
+    health: 55,
+    lastContact: "3 days ago",
+    initials: "PN",
+    color: "linear-gradient(135deg,#10b981,#3b82f6)",
+    sparkData: [10,20,15,30,25,40,35,50,45,55],
+    location: "Boston, MA",
+    notes: "In evaluation phase. Comparing us with two competitors. Decision expected by end of June.",
+    timeline: [
+      { text: "POC kickoff started", date: "Jun 7, 2026" },
+      { text: "Security review submitted", date: "May 28, 2026" },
+      { text: "Initial discovery call", date: "May 10, 2026" },
+    ]
+  },
+  {
+    id: 4,
+    name: "James Okafor",
+    role: "Director of IT",
+    company: "PrimeShip Logistics",
+    email: "j.okafor@primeship.io",
+    phone: "+1 (713) 884-5567",
+    status: "active",
+    tags: ["logistics", "enterprise"],
+    revenue: "$210K",
+    deals: 4,
+    health: 74,
+    lastContact: "Jun 8",
+    initials: "JO",
+    color: "linear-gradient(135deg,#14b8a6,#6366f1)",
+    sparkData: [50,60,55,65,60,70,68,72,74,76],
+    location: "Houston, TX",
+    notes: "Running a multi-site deployment. Support ticket backlog needs addressing.",
+    timeline: [
+      { text: "Site expansion proposal sent", date: "Jun 8, 2026" },
+      { text: "Support escalation resolved", date: "Jun 5, 2026" },
+      { text: "Quarterly check-in call", date: "May 20, 2026" },
+    ]
+  },
+  {
+    id: 5,
+    name: "Lena Böhm",
+    role: "CTO",
+    company: "ShopStream EU",
+    email: "l.bohm@shopstream.eu",
+    phone: "+49 89 2143 6600",
+    status: "active",
+    tags: ["ecommerce", "saas"],
+    revenue: "$145K",
+    deals: 2,
+    health: 83,
+    lastContact: "Jun 6",
+    initials: "LB",
+    color: "linear-gradient(135deg,#3b82f6,#06b6d4)",
+    sparkData: [40,50,60,55,70,65,75,80,82,83],
+    location: "Munich, Germany",
+    notes: "GDPR compliance upgrade in progress. Strong NPS score from last survey.",
+    timeline: [
+      { text: "GDPR module go-live", date: "Jun 6, 2026" },
+      { text: "NPS survey — score 9/10", date: "May 30, 2026" },
+      { text: "EU expansion contract signed", date: "Mar 3, 2026" },
+    ]
+  },
+  {
+    id: 6,
+    name: "Derek Fontaine",
+    role: "Product Manager",
+    company: "PixelForge Studio",
+    email: "d.fontaine@pixelforge.co",
+    phone: "+1 (212) 667-3300",
+    status: "prospect",
+    tags: ["saas", "smb"],
+    revenue: "$0",
+    deals: 1,
+    health: 40,
+    lastContact: "Jun 3",
+    initials: "DF",
+    color: "linear-gradient(135deg,#ec4899,#a855f7)",
+    sparkData: [5,10,8,20,15,25,30,35,38,40],
+    location: "New York, NY",
+    notes: "Small team, budget-constrained. Considering starter plan. Follow up with pricing proposal.",
+    timeline: [
+      { text: "Pricing proposal sent", date: "Jun 3, 2026" },
+      { text: "Free trial started", date: "May 22, 2026" },
+      { text: "Inbound sign-up", date: "May 20, 2026" },
+    ]
+  },
+  {
+    id: 7,
+    name: "Amara Diallo",
+    role: "Chief Data Officer",
+    company: "ClearVault Technologies",
+    email: "a.diallo@clearvault.tech",
+    phone: "+1 (408) 223-4455",
+    status: "active",
+    tags: ["enterprise", "saas"],
+    revenue: "$490K",
+    deals: 2,
+    health: 96,
+    lastContact: "Today",
+    initials: "AD",
+    color: "linear-gradient(135deg,#8b5cf6,#ec4899)",
+    sparkData: [70,75,80,85,82,90,88,93,95,96],
+    location: "San Jose, CA",
+    notes: "Champion advocate. Has referred two prospects. Eligible for partner program.",
+    timeline: [
+      { text: "Partner program enrollment", date: "Jun 10, 2026" },
+      { text: "Referral call — Nexora Inc", date: "Jun 4, 2026" },
+      { text: "Upsell — data vault tier", date: "Apr 18, 2026" },
+    ]
+  },
+  {
+    id: 8,
+    name: "Tom Nakashima",
+    role: "Procurement Lead",
+    company: "Renova Energy",
+    email: "t.nakashima@renovaenergy.com",
+    phone: "+1 (503) 887-6221",
+    status: "inactive",
+    tags: ["enterprise"],
+    revenue: "$95K",
+    deals: 0,
+    health: 28,
+    lastContact: "Apr 14",
+    initials: "TN",
+    color: "linear-gradient(135deg,#64748b,#475569)",
+    sparkData: [60,55,50,40,35,30,25,28,27,28],
+    location: "Portland, OR",
+    notes: "Budget freeze since Q1. Contract up for renewal in August. Needs executive re-engagement.",
+    timeline: [
+      { text: "No response to Q2 check-in", date: "May 2, 2026" },
+      { text: "Budget freeze notification", date: "Feb 28, 2026" },
+      { text: "Annual renewal completed", date: "Aug 10, 2025" },
+    ]
+  },
+  {
+    id: 9,
+    name: "Sophia Guerrero",
+    role: "Marketing Director",
+    company: "BlazeCart",
+    email: "s.guerrero@blazecart.com",
+    phone: "+1 (305) 992-4471",
+    status: "active",
+    tags: ["ecommerce", "smb"],
+    revenue: "$78K",
+    deals: 3,
+    health: 70,
+    lastContact: "Jun 7",
+    initials: "SG",
+    color: "linear-gradient(135deg,#f97316,#f59e0b)",
+    sparkData: [30,40,45,55,50,60,65,68,70,72],
+    location: "Miami, FL",
+    notes: "Heavy user of marketing automation features. Asked for A/B testing improvements.",
+    timeline: [
+      { text: "Feature request — A/B testing", date: "Jun 7, 2026" },
+      { text: "Usage review call", date: "May 25, 2026" },
+      { text: "Plan upgrade to Pro", date: "Apr 2, 2026" },
+    ]
+  },
+  {
+    id: 10,
+    name: "Raj Patel",
+    role: "Engineering Manager",
+    company: "Stackwise Labs",
+    email: "r.patel@stackwise.dev",
+    phone: "+1 (650) 341-7890",
+    status: "prospect",
+    tags: ["saas", "smb"],
+    revenue: "$0",
+    deals: 1,
+    health: 62,
+    lastContact: "Jun 5",
+    initials: "RP",
+    color: "linear-gradient(135deg,#0ea5e9,#10b981)",
+    sparkData: [20,25,30,40,45,55,58,60,61,62],
+    location: "Palo Alto, CA",
+    notes: "Highly technical stakeholder. Needs API documentation review. Strong intent signals.",
+    timeline: [
+      { text: "API sandbox access granted", date: "Jun 5, 2026" },
+      { text: "Technical evaluation call", date: "May 29, 2026" },
+      { text: "Trial sign-up via LinkedIn ad", date: "May 20, 2026" },
+    ]
+  },
+  {
+    id: 11,
+    name: "Claire Dupont",
+    role: "CEO",
+    company: "MediSoft Paris",
+    email: "c.dupont@medisoft.fr",
+    phone: "+33 1 44 38 22 10",
+    status: "active",
+    tags: ["healthcare", "enterprise"],
+    revenue: "$260K",
+    deals: 2,
+    health: 79,
+    lastContact: "Jun 9",
+    initials: "CD",
+    color: "linear-gradient(135deg,#ef4444,#f97316)",
+    sparkData: [55,60,65,70,68,72,75,78,79,80],
+    location: "Paris, France",
+    notes: "Expanding across DACH region. Needs French-language support improvements.",
+    timeline: [
+      { text: "DACH expansion proposal reviewed", date: "Jun 9, 2026" },
+      { text: "i18n request logged", date: "Jun 1, 2026" },
+      { text: "Signed 2-year contract", date: "Dec 14, 2025" },
+    ]
+  },
+  {
+    id: 12,
+    name: "Ethan Brooks",
+    role: "Operations Manager",
+    company: "GrainRoute Logistics",
+    email: "e.brooks@grainroute.com",
+    phone: "+1 (402) 556-8823",
+    status: "inactive",
+    tags: ["logistics", "smb"],
+    revenue: "$42K",
+    deals: 0,
+    health: 18,
+    lastContact: "Mar 20",
+    initials: "EB",
+    color: "linear-gradient(135deg,#475569,#334155)",
+    sparkData: [40,35,30,25,22,20,18,17,18,18],
+    location: "Omaha, NE",
+    notes: "May churn — low engagement for 3 months. Needs outreach campaign.",
+    timeline: [
+      { text: "Auto-email opened, no reply", date: "Apr 15, 2026" },
+      { text: "Last login recorded", date: "Mar 20, 2026" },
+      { text: "Support ticket closed", date: "Feb 8, 2026" },
+    ]
+  }
+];
+
+let currentFilter = 'all';
+let currentSearch = '';
+let currentTag = '';
+
+function healthColor(h) {
+  if (h >= 80) return '#10b981';
+  if (h >= 55) return '#f59e0b';
+  return '#ef4444';
+}
+
+function sparkBar(data, color) {
+  const max = Math.max(...data);
+  return data.map(v => {
+    const h = Math.round((v / max) * 36);
+    return `<div class="spark-bar" style="height:${h}px;background:${color};opacity:0.7"></div>`;
+  }).join('');
+}
+
+function renderCards(list) {
+  const grid = document.getElementById('customerGrid');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('countBadge').textContent = `${list.length} total`;
+  document.getElementById('sideCount').textContent = list.length;
+
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  grid.innerHTML = list.map(c => {
+    const sc = `status-${c.status}`;
+    const hColor = healthColor(c.health);
+    const tagHtml = c.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
+    const barColor = c.health >= 80 ? '#6366f1' : c.health >= 55 ? '#f59e0b' : '#ef4444';
+
+    return `
+    <div class="customer-card" onclick="openModal(${c.id})">
+      <div class="card-header">
+        <div class="avatar" style="background:${c.color}">${c.initials}</div>
+        <div class="card-info">
+          <div class="card-name">${c.name}</div>
+          <div class="card-role">${c.role}</div>
+          <div class="card-company">${c.company}</div>
+        </div>
+        <div class="status-dot ${sc}"></div>
+      </div>
+
+      <div class="card-metrics">
+        <div class="metric">
+          <div class="metric-label">Revenue</div>
+          <div class="metric-value green">${c.revenue}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Deals</div>
+          <div class="metric-value blue">${c.deals}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Health</div>
+          <div class="metric-value" style="color:${hColor}">${c.health}</div>
+          <div class="health-bar"><div class="health-fill" style="width:${c.health}%;background:${hColor}"></div></div>
+        </div>
+      </div>
+
+      <div class="sparkline">
+        <div class="sparkline-label"><span>Activity (10 weeks)</span><span style="color:${barColor}">${c.health}%</span></div>
+        <div class="spark-bar-row">${sparkBar(c.sparkData, barColor)}</div>
+      </div>
+
+      <div class="card-tags">${tagHtml}</div>
+
+      <div class="card-footer">
+        <span class="last-contact">🕐 ${c.lastContact}</span>
+        <div class="card-actions">
+          <button class="icon-btn" title="Email" onclick="event.stopPropagation()">✉️</button>
+          <button class="icon-btn" title="Call" onclick="event.stopPropagation()">📞</button>
+          <button class="icon-btn" title="More" onclick="event.stopPropagation()">⋯</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getFiltered() {
+  return customers.filter(c => {
+    const matchStatus = currentFilter === 'all' || c.status === currentFilter;
+    const matchTag = !currentTag || c.tags.includes(currentTag);
+    const q = currentSearch.toLowerCase();
+    const matchSearch = !q || c.name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q) || c.role.toLowerCase().includes(q);
+    return matchStatus && matchTag && matchSearch;
+  });
+}
+
+function setStatusFilter(status, el) {
+  currentFilter = status;
+  currentTag = '';
+  // update toolbar tabs
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  // update sidebar
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderCards(getFiltered());
+}
+
+function setFilter(tag, el) {
+  currentTag = tag;
+  currentFilter = 'all';
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderCards(getFiltered());
+}
+
+function filterCards() {
+  currentSearch = document.getElementById('globalSearch').value;
+  renderCards(getFiltered());
+}
+
+function openModal(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+
+  const hColor = healthColor(c.health);
+  const tagHtml = c.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
+
+  document.getElementById('modalTitle').innerHTML = `
+    <div class="avatar" style="background:${c.color};width:52px;height:52px;border-radius:14px;font-size:1.1rem">${c.initials}</div>
+    <div>
+      <div style="font-size:1.1rem;font-weight:700">${c.name}</div>
+      <div style="font-size:0.8rem;color:var(--muted)">${c.role} · ${c.company}</div>
+      <div style="margin-top:4px">${tagHtml}</div>
+    </div>`;
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="detail-row">
+      <div class="detail-block">
+        <div class="detail-block-label">📧 Email</div>
+        <div class="detail-block-value" style="font-size:0.8rem">${c.email}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-block-label">📞 Phone</div>
+        <div class="detail-block-value" style="font-size:0.8rem">${c.phone}</div>
+      </div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-block">
+        <div class="detail-block-label">📍 Location</div>
+        <div class="detail-block-value">${c.location}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-block-label">💰 Revenue</div>
+        <div class="detail-block-value" style="color:var(--green)">${c.revenue}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-block-label">❤️ Health</div>
+        <div class="detail-block-value" style="color:${hColor}">${c.health}/100</div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px">
+      <div class="detail-block-label">📝 Notes</div>
+      <div style="font-size:0.85rem;line-height:1.6;margin-top:6px">${c.notes}</div>
+    </div>
+    <div>
+      <div class="detail-block-label" style="padding:0 0 8px">🕐 Recent Activity</div>
+      <div class="timeline">
+        ${c.timeline.map(t => `
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div><div class="timeline-text">${t.text}</div><div class="timeline-date">${t.date}</div></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+
+// Init
+renderCards(customers);
+</script>
+</body>
+</html>

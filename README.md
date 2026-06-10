@@ -1,6 +1,10 @@
-# SageMaker Studio Code Editor
+# SageMaker Studio Code Editor With Anthropic Claude Code Extension - CDK v2 Example
 
-Deploy SageMaker Studio with Code Editor (VS Code in browser) into a private VPC using CDK v2.
+Deploy SageMaker Studio with Code Editor (VS Code in browser) into a private VPC using CDK v2. Claude Code VS Code extension is pre-installed via a lifecycle config.
+
+## Architecture
+
+![Architecture](./architecture.drawio.png)
 
 ## Prerequisites
 
@@ -11,27 +15,27 @@ Deploy SageMaker Studio with Code Editor (VS Code in browser) into a private VPC
   npx cdk bootstrap aws://ACCOUNT_ID/ap-southeast-2
   ```
 
-## Screebshot of Code Editor running in SageMaker Studio:
+## Screenshot of Code Editor running in SageMaker Studio:
 ![Screenshot](./screenshot.png)
 
 ## Deploy (POC)
 
 ```bash
 npm install
-npx cdk deploy --all --context prod=false --context userName=dev
+./scripts/deploy.sh
 ```
 
-This deploys three stacks: `VpcStack` → `EndpointsStack` → `StudioStack`.
+Deploys `VpcStack` and `StudioStack`. At the end it prompts to open Studio in the browser — press any key and it opens a presigned URL directly into Code Editor.
 
-Once complete, the outputs include a `StudioUrl`. Open it in the AWS Console to launch Code Editor.
+The Claude Code VS Code extension is pre-installed automatically via a lifecycle config on first space start.
 
 ## Deploy (prod)
 
 ```bash
-npx cdk deploy --all --context prod=true --context natMode=endpoints --context userName=yourname
+./scripts/deploy.sh --prod --nat-endpoints --user yourname
 ```
 
-Prod mode uses `VpcOnly` networking (no public internet from the instance) and deploys all required VPC interface endpoints instead of a NAT Gateway.
+Prod mode uses `VpcOnly` networking and deploys `EndpointsStack` (5 VPC interface endpoints) instead of a NAT Gateway.
 
 ## Context flags
 
