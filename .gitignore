@@ -6,3 +6,4 @@ cdk.out/
 *.d.ts
 !jest.config.js
 *.js.map
+cdk.context.json

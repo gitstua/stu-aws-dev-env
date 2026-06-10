@@ -70,16 +70,35 @@ CDK_CONTEXT=(
   "--context" "region=$REGION"
 )
 
-echo "--- Synthesising CloudFormation templates ---"
-npx cdk synth --all "${CDK_CONTEXT[@]}"
-echo ""
-
 echo "--- Deploying all stacks ---"
 npx cdk deploy --all --require-approval never "${CDK_CONTEXT[@]}"
 echo ""
 
 echo "=== Deploy complete ==="
 echo ""
+
+# Generate a presigned Studio URL valid for 5 minutes.
+DOMAIN_ID=$(aws cloudformation describe-stacks \
+  --stack-name StudioStack \
+  --region "$REGION" \
+  --query "Stacks[0].Outputs[?OutputKey=='DomainId'].OutputValue" \
+  --output text 2>/dev/null || true)
+
+if [[ -n "$DOMAIN_ID" ]]; then
+  PRESIGNED_URL=$(aws sagemaker create-presigned-domain-url \
+    --domain-id "$DOMAIN_ID" \
+    --user-profile-name "$USER_NAME" \
+    --region "$REGION" \
+    --query AuthorizedUrl \
+    --output text 2>/dev/null || true)
+
+  if [[ -n "$PRESIGNED_URL" ]]; then
+    echo "Studio is ready. Press any key to open in browser (link valid for 5 minutes)..."
+    read -r -s -n 1
+    open "$PRESIGNED_URL"
+  fi
+fi
+
 echo "Tip: To stop the Code Editor instance and avoid compute charges, open Studio"
 echo "     and shut down the running app from the Running Instances panel."
 echo ""

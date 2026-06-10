@@ -90,6 +90,42 @@ export class StudioStack extends cdk.Stack {
       );
     }
 
+
+    // --- Lifecycle Config: install Claude Code extension on space start ---
+
+    const lccScript = [
+      '#!/bin/bash',
+      'set -eux',
+      '',
+      'EXTENSIONS_DIR=/home/sagemaker-user/sagemaker-code-editor-server-data/extensions',
+      'mkdir -p "$EXTENSIONS_DIR"',
+      '',
+      '# Query marketplace API for latest version number',
+      "VERSION=$(curl -sf 'https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery' \\",
+      "  -H 'Content-Type: application/json' \\",
+      "  -H 'Accept: application/json;api-version=7.2-preview.1' \\",
+      '  -d \'{"filters":[{"criteria":[{"filterType":7,"value":"Anthropic.claude-code"}]}],"flags":512}\' \\',
+      "  | python3 -c \"import json,sys; print(json.load(sys.stdin)['results'][0]['extensions'][0]['versions'][0]['version'])\")",
+      'echo "Installing Claude Code extension version: $VERSION"',
+      '',
+      'curl -sSL -o /tmp/claude-code.vsix \\',
+      '  "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/Anthropic/vsextensions/claude-code/$VERSION/vspackage?targetPlatform=linux-x64"',
+      '',
+      'cd /tmp && rm -rf claude-code-extract && mkdir claude-code-extract',
+      'unzip -q claude-code.vsix -d claude-code-extract',
+      '',
+      'EXT_DIR=$(python3 -c "import json; d=json.load(open(\'/tmp/claude-code-extract/extension/package.json\')); print(d[\'publisher\']+\'.\'+d[\'name\']+\'-\'+d[\'version\'])")',
+      'rm -rf "$EXTENSIONS_DIR/$EXT_DIR"',
+      'mv /tmp/claude-code-extract/extension "$EXTENSIONS_DIR/$EXT_DIR"',
+      'rm -rf /tmp/claude-code.vsix /tmp/claude-code-extract',
+    ].join('\n');
+
+    const lcc = new sagemaker.CfnStudioLifecycleConfig(this, 'ClaudeCodeLCC', {
+      studioLifecycleConfigName: 'install-claude-code-8',
+      studioLifecycleConfigAppType: 'CodeEditor',
+      studioLifecycleConfigContent: Buffer.from(lccScript).toString('base64'),
+    });
+
     // --- SageMaker Domain ---
 
     const domain = new sagemaker.CfnDomain(this, 'Domain', {
@@ -100,6 +136,13 @@ export class StudioStack extends cdk.Stack {
       appNetworkAccessType: config.prod ? 'VpcOnly' : 'PublicInternetOnly',
       defaultUserSettings: {
         executionRole: role.roleArn,
+        studioWebPortalSettings: {
+          hiddenAppTypes: ['JupyterLab', 'RStudioServerPro', 'Canvas'],
+          hiddenMlTools: ['DataWrangler', 'FeatureStore', 'EmrClusters', 'AutoMl',
+                          'Experiments', 'Training', 'ModelEvaluation', 'Pipelines',
+                          'Models', 'JumpStart', 'InferenceRecommender', 'Endpoints',
+                          'Projects', 'InferenceOptimization', 'HyperPodClusters'],
+        },
         codeEditorAppSettings: {
           appLifecycleManagement: {
             idleSettings: {
@@ -111,8 +154,10 @@ export class StudioStack extends cdk.Stack {
           },
           // No sageMakerImageArn needed — Code Editor only supports SageMaker
           // Distribution, so SageMaker always provisions the correct image.
+          lifecycleConfigArns: [lcc.attrStudioLifecycleConfigArn],
           defaultResourceSpec: {
             instanceType: 'ml.t3.medium',
+            lifecycleConfigArn: lcc.attrStudioLifecycleConfigArn,
           },
         },
       },
